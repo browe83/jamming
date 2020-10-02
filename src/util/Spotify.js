@@ -1,6 +1,6 @@
 let accessToken;
 const clientID = "3c0544fd33764a33b751be9e7e1dcb7d";
-const redirectURI = "http://localhost:3000/";
+const redirectURI = "http://sweet-blade.surge.sh";
 
 const Spotify = {
   getAccessToken() {
@@ -35,13 +35,51 @@ const Spotify = {
         if (!jsonResponse.tracks) {
           return [];
         }
-        return jsonResponse.tracks.map((track) => ({
+
+        return jsonResponse.tracks.items.map((track) => ({
           id: track.id,
           name: track.name,
           artist: track.artists[0].name,
           album: track.album.name,
           uri: track.uri,
         }));
+      });
+  },
+  savePlaylist(name, trackUris) {
+    if (!name || !trackUris) {
+      return;
+    }
+    accessToken = Spotify.getAccessToken();
+    const headers = {
+      Authorization: `Bearer ${accessToken}`,
+    };
+    let userID;
+
+    return fetch("https://api.spotify.com/v1/me", { headers: headers })
+      .then((response) => response.json())
+      .then((jsonResponse) => {
+        userID = jsonResponse.id;
+        return fetch(
+          `https://api.spotify.com/v1/users/${userID}/playlists
+        `,
+          {
+            headers: headers,
+            method: "POST",
+            body: JSON.stringify({ name: name }),
+          }
+        )
+          .then((response) => response.json())
+          .then((jsonResponse) => {
+            const playlistId = jsonResponse.id;
+            return fetch(
+              `https://api.spotify.com/v1/users/${userID}/playlists/${playlistId}/tracks`,
+              {
+                headers: headers,
+                method: "POST",
+                body: JSON.stringify({ uris: trackUris }),
+              }
+            );
+          });
       });
   },
 };
