@@ -10,14 +10,18 @@ class App extends React.Component {
     super(props);
     this.state = {
       searchResults: [],
-      playlistName: "play-list-name",
+      playlistName: "New Playlist",
       playlistTracks: [],
+      loading: false,
     };
     this.addTrack = this.addTrack.bind(this);
     this.removeTrack = this.removeTrack.bind(this);
     this.updatePlaylistName = this.updatePlaylistName.bind(this);
     this.savePlaylist = this.savePlaylist.bind(this);
     this.search = this.search.bind(this);
+  }
+  componentDidMount() {
+    Spotify.getAccessToken();
   }
   addTrack(track) {
     let tracks = this.state.playlistTracks;
@@ -53,9 +57,13 @@ class App extends React.Component {
     });
   }
   search(term) {
+    this.setState({
+      loading: true,
+    });
     Spotify.search(term).then((searchResults) => {
       this.setState({
         searchResults: searchResults,
+        loading: false,
       });
     });
   }
@@ -71,6 +79,7 @@ class App extends React.Component {
             <SearchResults
               searchResults={this.state.searchResults}
               onAdd={this.addTrack}
+              isLoading={this.state.loading}
             />
             <Playlist
               playlistName={this.state.playlistName}
